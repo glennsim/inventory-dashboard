@@ -16,7 +16,12 @@ def create_app():
     
     @app.route('/')
     def index():
-        """Render the main dashboard page."""
+        """Render the cell format landing page."""
+        return render_template('cell_format.html')
+    
+    @app.route('/dashboard')
+    def dashboard():
+        """Render the main inventory dashboard page."""
         return render_template('dashboard.html')
     
     @app.route('/api/inventory')
