@@ -1,0 +1,442 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="cell-format-container">
+    <!-- Header Section -->
+    <div class="cell-format-header">
+        <h2>Cell Format Inventory</h2>
+        <p class="subtitle">Detailed breakdown of cell formats and specifications</p>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="search-filter-section">
+        <div class="search-box">
+            <input 
+                type="text" 
+                id="cellSearchInput" 
+                class="search-input" 
+                placeholder="Search by An or Ca..."
+                onkeyup="searchCellFormat()"
+            >
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="summary-cards">
+        <div class="summary-card">
+            <span class="summary-label">Total Cell Formats</span>
+            <span class="summary-value" id="totalFormats">0</span>
+        </div>
+        <div class="summary-card">
+            <span class="summary-label">Total Inventory</span>
+            <span class="summary-value" id="totalInventory">0</span>
+        </div>
+        <div class="summary-card">
+            <span class="summary-label">Active Types</span>
+            <span class="summary-value" id="activeTypes">0</span>
+        </div>
+    </div>
+
+    <!-- Data Entry Form -->
+    <div class="form-section">
+        <h3>Add New Cell Format</h3>
+        <form id="cellFormatForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="anInput">An (Anode)</label>
+                    <input type="text" id="anInput" placeholder="e.g., UK DOEL" required>
+                </div>
+                <div class="form-group">
+                    <label for="caInput">Ca (Cathode)</label>
+                    <input type="text" id="caInput" placeholder="e.g., UK BIC" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="multiNotchedInput">Multi Notched</label>
+                    <input type="number" id="multiNotchedInput" placeholder="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="woundJRInput">Wound JR</label>
+                    <input type="number" id="woundJRInput" placeholder="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="driedJRInput">Dried JR</label>
+                    <input type="number" id="driedJRInput" placeholder="0" min="0">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="weldedJRPouchInput">Welded JR in pouch</label>
+                    <input type="number" id="weldedJRPouchInput" placeholder="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="filledW23Input">Filled (on W23)</label>
+                    <input type="number" id="filledW23Input" placeholder="0" min="0">
+                </div>
+            </div>
+            <button type="button" class="btn btn-add" onclick="addCellFormat()">Add Cell Format</button>
+        </form>
+    </div>
+
+    <!-- Cell Format Table -->
+    <div class="table-section">
+        <div class="table-header">
+            <h3>Cell Format Inventory Table</h3>
+            <div class="table-actions">
+                <button class="btn btn-export" onclick="exportToCSV()">📥 Export CSV</button>
+                <a href="/dashboard" class="btn btn-dashboard">📊 Main Dashboard</a>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="cell-format-table" id="cellFormatTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>An</th>
+                        <th>Ca</th>
+                        <th>Multi Notched</th>
+                        <th>Wound JR</th>
+                        <th>Dried JR</th>
+                        <th>Welded JR in pouch</th>
+                        <th>Filled (on W23)</th>
+                        <th>Total</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="cellFormatBody">
+                    <tr class="empty-row">
+                        <td colspan="10" class="text-center">Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .cell-format-container {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .cell-format-header {
+        margin-bottom: 30px;
+        border-bottom: 2px solid #e0e0e0;
+        padding-bottom: 20px;
+    }
+
+    .cell-format-header h2 {
+        margin: 0 0 10px 0;
+        font-size: 28px;
+        color: #333;
+    }
+
+    .subtitle {
+        color: #666;
+        margin: 0;
+    }
+
+    .search-filter-section {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .search-box {
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #4CAF50;
+        box-shadow: 0 0 8px rgba(76, 175, 80, 0.2);
+    }
+
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+
+    .summary-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .summary-label {
+        font-size: 14px;
+        opacity: 0.9;
+    }
+
+    .summary-value {
+        font-size: 32px;
+        font-weight: bold;
+    }
+
+    .form-section {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .form-section h3 {
+        margin-top: 0;
+        color: #333;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group label {
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: #333;
+    }
+
+    .form-group input {
+        padding: 10px 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: #4CAF50;
+    }
+
+    .btn-add {
+        background: #4CAF50;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+
+    .btn-add:hover {
+        background: #45a049;
+    }
+
+    .table-section {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .table-header {
+        padding: 20px;
+        border-bottom: 1px solid #e0e0e0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .table-header h3 {
+        margin: 0;
+        color: #333;
+    }
+
+    .table-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-export, .btn-dashboard {
+        background: #2196F3;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-export:hover, .btn-dashboard:hover {
+        background: #0b7dda;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    .cell-format-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+
+    .cell-format-table thead {
+        background: #f5f5f5;
+    }
+
+    .cell-format-table th {
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+        color: #333;
+        border-bottom: 2px solid #e0e0e0;
+    }
+
+    .cell-format-table td {
+        padding: 12px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .cell-format-table tbody tr:hover {
+        background: #fafafa;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .btn-delete {
+        background: #f44336;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+    }
+
+    .btn-delete:hover {
+        background: #da190b;
+    }
+</style>
+
+<script>
+    let cellFormats = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCellFormats();
+    });
+
+    function loadCellFormats() {
+        const saved = localStorage.getItem('cellFormats');
+        if (saved) {
+            cellFormats = JSON.parse(saved);
+        } else {
+            cellFormats = [
+                { an: 'UK DOEL', ca: 'UK BIC', multiNotched: 1, woundJR: 0, driedJR: 0, weldedJRPouch: 18, filledW23: 0 },
+                { an: 'JR Energy', ca: 'JR Energy', multiNotched: 2, woundJR: 65, driedJR: 17, weldedJRPouch: 6, filledW23: 22 },
+                { an: 'UK DOEL', ca: 'JR Energy', multiNotched: 3, woundJR: 14, driedJR: 0, weldedJRPouch: 6, filledW23: 0 }
+            ];
+            saveCellFormats();
+        }
+        displayCellFormats(cellFormats);
+        updateSummary();
+    }
+
+    function displayCellFormats(formats) {
+        const tbody = document.getElementById('cellFormatBody');
+        if (!formats || formats.length === 0) {
+            tbody.innerHTML = '<tr class="empty-row"><td colspan="10">No data</td></tr>';
+            return;
+        }
+        let html = '';
+        formats.forEach((format, index) => {
+            const total = format.multiNotched + format.woundJR + format.driedJR + format.weldedJRPouch + format.filledW23;
+            html += `<tr><td>${index + 1}</td><td>${format.an}</td><td>${format.ca}</td><td>${format.multiNotched}</td><td>${format.woundJR}</td><td>${format.driedJR}</td><td>${format.weldedJRPouch}</td><td>${format.filledW23}</td><td><strong>${total}</strong></td><td><button class="btn-delete" onclick="deleteCellFormat(${index})">Delete</button></td></tr>`;
+        });
+        tbody.innerHTML = html;
+    }
+
+    function addCellFormat() {
+        const an = document.getElementById('anInput').value.trim();
+        const ca = document.getElementById('caInput').value.trim();
+        if (!an || !ca) {
+            alert('Fill in An and Ca');
+            return;
+        }
+        cellFormats.push({
+            an, ca,
+            multiNotched: parseInt(document.getElementById('multiNotchedInput').value) || 0,
+            woundJR: parseInt(document.getElementById('woundJRInput').value) || 0,
+            driedJR: parseInt(document.getElementById('driedJRInput').value) || 0,
+            weldedJRPouch: parseInt(document.getElementById('weldedJRPouchInput').value) || 0,
+            filledW23: parseInt(document.getElementById('filledW23Input').value) || 0
+        });
+        saveCellFormats();
+        displayCellFormats(cellFormats);
+        updateSummary();
+        document.getElementById('cellFormatForm').reset();
+    }
+
+    function deleteCellFormat(index) {
+        cellFormats.splice(index, 1);
+        saveCellFormats();
+        displayCellFormats(cellFormats);
+        updateSummary();
+    }
+
+    function searchCellFormat() {
+        const query = document.getElementById('cellSearchInput').value.toLowerCase();
+        const filtered = cellFormats.filter(f => f.an.toLowerCase().includes(query) || f.ca.toLowerCase().includes(query));
+        displayCellFormats(filtered);
+    }
+
+    function updateSummary() {
+        document.getElementById('totalFormats').textContent = cellFormats.length;
+        const total = cellFormats.reduce((sum, f) => sum + f.multiNotched + f.woundJR + f.driedJR + f.weldedJRPouch + f.filledW23, 0);
+        document.getElementById('totalInventory').textContent = total;
+        document.getElementById('activeTypes').textContent = new Set(cellFormats.map(f => f.an)).size;
+    }
+
+    function saveCellFormats() {
+        localStorage.setItem('cellFormats', JSON.stringify(cellFormats));
+    }
+
+    function exportToCSV() {
+        if (!cellFormats.length) return;
+        let csv = 'An,Ca,Multi Notched,Wound JR,Dried JR,Welded JR,Filled,Total\n';
+        cellFormats.forEach(f => {
+            const total = f.multiNotched + f.woundJR + f.driedJR + f.weldedJRPouch + f.filledW23;
+            csv += `${f.an},${f.ca},${f.multiNotched},${f.woundJR},${f.driedJR},${f.weldedJRPouch},${f.filledW23},${total}\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `cell-format-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+    }
+</script>
+{% endblock %}
