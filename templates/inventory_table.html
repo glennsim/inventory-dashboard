@@ -1,0 +1,12 @@
+<!-- Inventory table rows template -->
+<tr class="inventory-row">
+    <td class="item-id">{{ item.id }}</td>
+    <td class="item-name">{{ item.Item }}</td>
+    <td class="item-sku">{{ item.SKU }}</td>
+    <td class="item-quantity">{{ item.Quantity }}</td>
+    <td class="item-status">
+        <span class="status-badge {{ item.Status|lower|replace(' ', '-') }}">
+            {{ item.Status }}
+        </span>
+    </td>
+</tr>
